@@ -118,12 +118,18 @@ namespace ApprovalTests
     {
         APPROVAL_TESTS_UNUSED(directory);
 #ifdef _WIN32
-        int nError = _mkdir(directory.c_str());
-        if (nError != 0)
+        for (auto pos = directory.find('\\', 1); ; pos = directory.find('\\', pos + 1))
         {
-            std::string helpMessage =
-                std::string("Unable to create directory: ") + directory;
-            throw std::runtime_error(helpMessage);
+            if (_mkdir(directory.substr(0, pos).c_str(), nMode) != 0 && errno != EEXIST)
+            {
+                std::string helpMessage =
+                    std::string("Unable to create directory: ") + directory;
+                throw std::runtime_error(helpMessage);
+            }
+            if (pos == std::string::npos)
+            {
+                break;
+            }
         }
 #endif
     }
@@ -133,12 +139,18 @@ namespace ApprovalTests
         APPROVAL_TESTS_UNUSED(directory);
 #ifndef _WIN32
         mode_t nMode = 0733; // UNIX style permissions
-        int nError = mkdir(directory.c_str(), nMode);
-        if (nError != 0)
+        for (auto pos = directory.find('/', 1); ; pos = directory.find('/', pos + 1))
         {
-            std::string helpMessage =
-                std::string("Unable to create directory: ") + directory;
-            throw std::runtime_error(helpMessage);
+            if (mkdir(directory.substr(0, pos).c_str(), nMode) != 0 && errno != EEXIST)
+            {
+                std::string helpMessage =
+                    std::string("Unable to create directory: ") + directory;
+                throw std::runtime_error(helpMessage);
+            }
+            if (pos == std::string::npos)
+            {
+                break;
+            }
         }
 #endif
     }
